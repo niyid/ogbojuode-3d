@@ -1,0 +1,149 @@
+OGBOJU ODE 3D — MESHY PROMPT LIST
+==================================
+Matches GameObjects created in Assets/Editor/SceneSetupWizard.cs.
+Generate in the priority order listed. Set Pose = T-Pose for any item
+marked [RIGGED] since those need animation.
+
+Recommended order: generate one at a time (not batch-pasted), check the
+result before spending credits on the next, especially items 1-6 below.
+
+
+1. Player_Akara_Ogun  [RIGGED — CHARACTER]
+------------------------------------------
+Full-body 3D game character, a legendary 19th-century Yoruba hunter.
+Wearing traditional hunter's attire (Aso Ode), distressed brown woven
+fabric covered in small leather amulets, cowrie shells, and gourd charms
+strapped across the torso and arms. Dark skin, braided hair, determined
+expression, carrying a machete sheath at the hip. Stylized dark fantasy
+game-ready model, clean quad topology, T-pose, ready for auto-rigging.
+
+
+2. Creature_Agbako  [BOSS CREATURE]
+------------------------------------
+A terrifying towering boss monster with sixteen small glowing eyes
+arranged symmetrically across its head and upper body, skin like gnarled
+dark tree bark fused with rock, long clawed arms, hulking posture.
+Afro-surrealist dark fantasy creature, highly detailed, game-ready,
+T-pose or idle stance.
+
+
+3. Ostrich_King_Oba_Eye  [RIGGED — RIDDLE BOSS]
+-------------------------------------------------
+A surreal humanoid-bird hybrid entity: from the neck up, a regal, stern
+human king wearing a weathered tribal crown; from the neck down, the
+body, legs, and feathers of a massive ostrich. Mystical, eerie, dignified
+bearing rather than aggressive. Stylized realism, game-ready, T-pose.
+
+
+4. Creature_Ijamba
+-------------------
+A hulking brute giant from West African folklore, thick corded muscle,
+dark reddish-brown rough hide like dried clay, small deep-set eyes,
+oversized fists. Heavy, slow, intimidating stance. Game-ready creature
+model, clean topology, dark fantasy style.
+
+
+5. Creature_Eru
+----------------
+A shape-shifting forest spirit creature, multiple faces blurring across
+one head as if seen mid-transformation, lean and wiry build, dark green
+mossy skin with faint bioluminescent veins. Unsettling, fast-looking
+silhouette, low-poly game-ready, dark fantasy style.
+
+
+6. Ghommid_Spirit
+------------------
+A small mischievous forest spirit gnome, half-human half-plant hybrid,
+skin made of green moss and twisting roots, glowing amber eyes, playful
+crouched pose. Low-poly, optimized for a mobile game, whimsical
+dark-fantasy style.
+
+
+7. Musket (handheld item, distinct from Musket_Muzzle anchor in code)
+------------------------------------------------------------------------
+Low-poly game prop, ancient West African flintlock musket. Dark mahogany
+wooden stock intricately carved with geometric Yoruba tribal patterns and
+small metallic protective charms inlaid along the barrel. Weathered iron
+barrel, aged brass fittings. Clean topology for a handheld weapon prop.
+
+
+8. Machete
+-----------
+Low-poly game prop, a heavy broad-bladed hunting machete with a worn
+leather-wrapped handle, housed in a weathered leather sheath. Slightly
+nicked blade suggesting long use. Game-ready, clean topology.
+
+
+9. Clay_Hut (+ Thatched_Roof)
+-------------------------------
+Modular 3D game prop, a traditional pre-colonial Yoruba mud hut with a
+conical thatched roof, reddish-brown clay walls with visible
+hand-textured surface, small low doorway. Low-poly, game-ready, matches
+a village hub kit.
+
+
+10. Carved_Pillar (Arugba)
+----------------------------
+Low-poly game prop, a tall carved wooden ceremonial pillar with faint
+relief patterns depicting ancestral figures and geometric Yoruba motifs,
+weathered dark wood finish. Game-ready, clean topology.
+
+
+11. Mahogany_Tree  (x20 instances in Forest)
+-----------------------------------------------
+A single ancient West African mahogany tree, thick gnarled trunk with
+exposed twisting roots, dark bark, dense canopy. Low-poly game asset
+optimized for repeated instancing across a forest, game-ready, clean
+topology.
+
+
+12. Spirit_Fungus  (x15 instances, forest floor)
+----------------------------------------------------
+A small cluster of bioluminescent mystical fungi/mushrooms, soft glowing
+amber-green light emanating from the caps, growing low to the ground.
+Stylized dark fantasy prop, low-poly, game-ready, optimized for
+scattering across a forest floor.
+
+
+13. Central_Bonfire  (village hub centerpiece)
+--------------------------------------------------
+A West African-style ceremonial bonfire pit — a stacked pile of dark
+charred logs arranged in a circular pit, ash and ember scorch marks
+around the base. Low-poly game prop, no flame geometry needed (flame
+handled separately via particle effect in Unity).
+
+
+14. Defensive_Spike  (x10 instances, village perimeter)
+------------------------------------------------------------
+A single sharpened wooden defensive stake/spike, weathered dark wood,
+driven into the ground at a slight outward angle. Low-poly game prop,
+designed for repeated instancing along a perimeter line.
+
+
+SKIP — DO NOT GENERATE ON MESHY
+==================================
+Forest_Floor / Village_Ground
+  -> Terrain, not a discrete mesh. Use Unity Terrain tool + tiling
+     ground texture instead.
+
+TEMP_Bullet_Prefab (musket projectile)
+  -> Too small/fast to read as a detailed mesh in motion. Use a plain
+     sphere + particle trail effect instead.
+
+Musket_Muzzle
+  -> Empty anchor Transform in code, not a visible object.
+
+
+NOTES
+======
+- Free tier: ~100 credits/month. Prioritize items 1-6 first (characters/
+  creatures are highest risk of needing a re-prompt); batch items 11-14
+  (tree, fungus, bonfire, spike) together since they're low-detail,
+  low-risk "cheap win" props.
+- Export format: FBX or GLB, both import cleanly into Unity.
+- Items marked [RIGGED] should use Meshy's auto-rig feature after
+  generation (T-pose export required for this to work).
+- On import, rescale so Agbako reads as roughly 4x Akara-Ogun's height,
+  matching the (3, 6, 3) scale already set in SceneSetupWizard.cs —
+  Meshy/Tripo exports come in arbitrary units and won't match this
+  automatically.
