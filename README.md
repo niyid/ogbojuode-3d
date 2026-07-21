@@ -15,7 +15,36 @@ fresh Unity project and it will compile as-is.
    `Assets/Editor` both exist inside it.
 4. Reopen the project in Unity. Let it recompile scripts.
 5. Go to **Edit → Project Settings → Tags and Layers** and add two tags:
-   `Player` and `Enemy` (the scripts reference these).
+   `Player` and `Enemy` (the scripts reference these) — or skip this, the
+   wizard now auto-creates them if missing.
+5b. **Import real assets (optional but recommended).** Run:
+
+    ```bash
+    cd ~/git/ogbojuode-3d
+    mkdir -p Assets/Models/Characters Assets/Models/Props
+
+    for name in "tribal warrior 3d model" "agbako creature 3d model" \
+                "ostrich king 3d model" "brute giant 3d model" \
+                "creature eru 3d model" "forest spirit 3d model" musket; do
+      mkdir -p "Assets/Models/Characters/${name// /_}"
+      unzip -o ~/Downloads/"${name}.zip" -d "Assets/Models/Characters/${name// /_}"
+    done
+
+    cp ~/Downloads/kenney_fantasy-town-kit_2.0/Models/FBX\ format/pillar-wood.fbx Assets/Models/Props/
+    cp ~/Downloads/kenney_fantasy-town-kit_2.0/Models/FBX\ format/blade.fbx Assets/Models/Props/
+    cp ~/Downloads/kenney_fantasy-town-kit_2.0/Models/FBX\ format/wall-wood.fbx Assets/Models/Props/
+    cp ~/Downloads/kenney_fantasy-town-kit_2.0/Models/FBX\ format/roof-high-point.fbx Assets/Models/Props/
+    cp ~/Downloads/kenney_nature-kit/Models/FBX\ format/tree_oak_dark.fbx Assets/Models/Props/
+    cp ~/Downloads/kenney_nature-kit/Models/FBX\ format/mushroom_redGroup.fbx Assets/Models/Props/
+    cp ~/Downloads/kenney_survival-kit/Models/FBX\ format/campfire-pit.fbx Assets/Models/Props/
+    cp ~/Downloads/kenney_survival-kit/Models/FBX\ format/fence-fortified.fbx Assets/Models/Props/
+    ```
+
+    Reopen Unity (or let it auto-detect) so the new FBX files get imported.
+    **This step is optional** — `SceneSetupWizard.cs` checks for each asset
+    and falls back to a colored primitive placeholder for anything not
+    found, so the build command works with zero, some, or all assets
+    imported.
 6. In the menu bar, click **Ogboju Ode → Build Entire Universe**. This spawns:
    - A **hub village** at the origin — clay huts, six carved pillars (Arugba)
      around a lit bonfire, a ring of defensive spikes facing the tree line.
@@ -99,7 +128,11 @@ fresh Unity project and it will compile as-is.
   (`Ogboju Ode → Build Entire Universe`) that assembles the hub village,
   forest, all three creatures, the Ostrich-King, three ghommids, player,
   camera, lighting, and the two manager singletons in one click.
-  Auto-creates the `Player`/`Enemy` tags.
+  Auto-creates the `Player`/`Enemy` tags. Loads real imported models from
+  `Assets/Models/Characters/` and `Assets/Models/Props/` when present,
+  falling back to a colored primitive placeholder (named with a
+  `_PLACEHOLDER` suffix) for anything not yet imported — so partial asset
+  progress never breaks the build.
 
 ## Note on AgbakoAI.cs (old file)
 
