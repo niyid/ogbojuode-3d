@@ -26,12 +26,23 @@ public class RiddleGiver : MonoBehaviour
 
         float dist = Vector3.Distance(transform.position, player.position);
         if (dist <= interactRange && Input.GetKeyDown(KeyCode.F))
-        {
-            Debug.Log($"[{gameObject.name}] asks: \"{riddleText}\"");
-            // Hook your real dialogue/riddle UI here. This stub auto-resolves
-            // as correct so the loop is testable without a UI yet.
-            ResolveRiddle(true);
-        }
+            Interact();
+    }
+
+    // Same range/resolved checks as the F-key path above, but callable
+    // directly — the keyboard's "F near a spirit" prompt has no touch
+    // equivalent otherwise, so mobile players would have no way to ever
+    // trigger a riddle. Wire this to an on-screen Interact button
+    // (see MobileTouchUI.cs).
+    public void Interact()
+    {
+        if (resolved || player == null) return;
+        if (Vector3.Distance(transform.position, player.position) > interactRange) return;
+
+        Debug.Log($"[{gameObject.name}] asks: \"{riddleText}\"");
+        // Hook your real dialogue/riddle UI here. This stub auto-resolves
+        // as correct so the loop is testable without a UI yet.
+        ResolveRiddle(true);
     }
 
     public void ResolveRiddle(bool answeredCorrectly)

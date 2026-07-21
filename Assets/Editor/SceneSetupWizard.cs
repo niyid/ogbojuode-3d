@@ -307,6 +307,24 @@ public static class SceneSetupWizard
         InstantiateModelOrPrimitive(
             model, type + "_Model", go.transform,
             PrimitiveType.Cube, fallbackColor, fallbackScale);
+
+        // Placeholder primitives get a Collider for free, but imported FBX
+        // models don't — and either way the collider ends up on the child
+        // model object, not on `go` where CreatureAI/IDamageable lives.
+        // Add an explicit collider on the root so melee/musket hits always
+        // have something reliable to register against, regardless of which
+        // model (or lack of one) is present.
+        AddRootHitCollider(go, fallbackScale);
+    }
+
+    // Sized off the same fallbackScale used for the placeholder, so the hit
+    // volume roughly matches the creature's silhouette either way.
+    private static void AddRootHitCollider(GameObject root, Vector3 approxSize)
+    {
+        CapsuleCollider col = root.AddComponent<CapsuleCollider>();
+        col.height = Mathf.Max(approxSize.y, 1f);
+        col.radius = Mathf.Max(approxSize.x, approxSize.z, 0.5f) * 0.5f;
+        col.center = new Vector3(0f, col.height * 0.5f, 0f);
     }
 
     // --- Ostrich-King ------------------------------------------------------------
@@ -343,6 +361,10 @@ public static class SceneSetupWizard
             head.transform.localScale = Vector3.one * 1.2f;
             SetColor(head, new Color(0.75f, 0.6f, 0.3f));
         }
+
+        // Same reasoning as the forest creatures: put a reliable collider on
+        // the root where OstrichKingBoss's IDamageable actually lives.
+        AddRootHitCollider(king, new Vector3(2f, 4f, 2f));
     }
 
     // --- Ghommids ------------------------------------------------------------
