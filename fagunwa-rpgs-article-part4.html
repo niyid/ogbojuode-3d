@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flesh on the Bones: Ogboju Ode Steps Into Three Dimensions</title>
+
+<!-- SEO -->
+<meta name="description" content="Part IV: Akara-ogun's story gets a third spin-off — a Unity/Android 3D prototype. One-click world assembly, a riddle-and-wisdom loop borrowed from the book's actual structure, and the first real test of AI-generated 3D assets against a series that has never used external art before.">
+<meta name="author" content="niyid">
+<meta name="keywords" content="Yoruba literature, D.O. Fagunwa, Ogboju Ode, Unity, C#, Android, 3D game development, Tripo AI, Meshy, AI-generated 3D assets, Techducat, game design">
+
+<!-- Open Graph (Substack, Facebook, LinkedIn link previews) -->
+<meta property="og:type" content="article">
+<meta property="og:title" content="Flesh on the Bones: Ogboju Ode Steps Into Three Dimensions">
+<meta property="og:description" content="Part IV of the Fagunwa RPG series — a new Unity 3D prototype, a one-click world-builder script, a riddle/wisdom loop lifted from the book's real structure, and an honest look at what AI 3D generation tools actually deliver on their free tiers.">
+<meta property="og:url" content="https://niyid.github.io/ogbojuode-3d/fagunwa-rpgs-article-part4.html">
+<meta property="og:site_name" content="Techducat">
+<meta property="article:author" content="https://github.com/niyid">
+
+<!-- Twitter/X Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Flesh on the Bones: Ogboju Ode Steps Into Three Dimensions">
+<meta name="twitter:description" content="Part IV — Akara-ogun's journey gets a Unity 3D prototype, a riddle-and-wisdom loop, and a real test of AI-generated 3D asset pipelines against a series that started with zero external art.">
+
+<!-- Canonical -->
+<link rel="canonical" href="https://niyid.github.io/ogbojuode-3d/fagunwa-rpgs-article-part4.html">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg:           #080907;
+    --surface:      #0d100c;
+    --panel:        #12160f;
+    --border:       #22271d;
+    --border-hi:    #3a4230;
+    --gold:         #d9a441;
+    --gold-dim:     rgba(217,164,65,0.14);
+    --sea:          #2f7a82;
+    --sea-dim:      rgba(47,122,130,0.14);
+    --forest:       #4a8f63;
+    --forest-dim:   rgba(74,143,99,0.14);
+    --red:          #b3402b;
+    --red-dim:      rgba(179,64,43,0.14);
+    --violet:       #8a76c9;
+    --text:         #e9e4d6;
+    --muted:        #7c8577;
+    --muted-hi:     #b3ae9c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.75;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(217,164,65,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(217,164,65,0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 28px 96px;
+  }
+
+  .hero { padding: 80px 0 64px; border-bottom: 1px solid var(--border); margin-bottom: 64px; position: relative; }
+
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 28px;
+  }
+  .hero-eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--gold); }
+
+  h1 {
+    font-family: 'Playfair Display', serif; font-size: clamp(36px, 6vw, 66px);
+    font-weight: 900; line-height: 1.06; letter-spacing: -0.02em; margin-bottom: 28px;
+  }
+  h1 .accent { color: var(--gold); }
+  h1 .italic { font-style: italic; }
+
+  .hero-meta {
+    display: flex; align-items: center; gap: 20px; font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 32px; flex-wrap: wrap;
+  }
+  .hero-meta span { display: flex; align-items: center; gap: 6px; }
+  .hero-meta .sep { color: var(--border-hi); }
+
+  .hero-lead {
+    font-size: 18px; font-weight: 300; color: var(--muted-hi); line-height: 1.7; max-width: 680px;
+    border-left: 3px solid var(--gold); padding-left: 20px;
+  }
+
+  .ghost-hero { position: absolute; right: -10px; top: 30px; width: 190px; opacity: 0.08; pointer-events: none; }
+
+  section { margin-bottom: 72px; }
+
+  .section-kicker {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
+  }
+  .section-kicker::after { content: ''; display: block; flex: 1; height: 1px; background: var(--border); }
+
+  h2 {
+    font-family: 'Playfair Display', serif; font-size: clamp(24px, 3.5vw, 36px); font-weight: 700;
+    line-height: 1.2; letter-spacing: -0.015em; margin-bottom: 24px;
+  }
+  h3 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+
+  p { margin-bottom: 18px; color: var(--muted-hi); }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--text); font-weight: 500; }
+  a { color: var(--gold); }
+  code { font-family: 'IBM Plex Mono', monospace; font-size: 0.9em; background: var(--panel); padding: 2px 6px; border-radius: 4px; color: var(--muted-hi); border: 1px solid var(--border); }
+
+  .game-badge {
+    display: inline-flex; align-items: center; gap: 6px; border-radius: 4px; padding: 3px 10px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .badge-forest { background: var(--forest-dim); color: #7fc296; border: 1px solid rgba(74,143,99,0.35); }
+  .badge-violet { background: rgba(138,118,201,0.14); color: var(--violet); border: 1px solid rgba(138,118,201,0.35); }
+
+  .pull-quote {
+    background: var(--gold-dim); border: 1px solid rgba(217,164,65,0.25); border-left: 4px solid var(--gold);
+    border-radius: 0 8px 8px 0; padding: 24px 28px; margin: 32px 0;
+  }
+  .pull-quote p { font-family: 'Playfair Display', serif; font-style: italic; font-size: 18px; line-height: 1.6; color: var(--text); margin-bottom: 10px; }
+  .pull-quote cite { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--gold); text-transform: uppercase; }
+
+  .pillars-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 32px 0; }
+  @media (max-width: 600px) { .pillars-grid { grid-template-columns: 1fr; } }
+
+  .pillar {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 22px 20px;
+    position: relative; overflow: hidden; transition: border-color 0.2s;
+  }
+  .pillar:hover { border-color: var(--border-hi); }
+  .pillar-icon { font-size: 26px; margin-bottom: 12px; display: block; }
+  .pillar-name {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  .pillar h3 { font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; margin-bottom: 8px; color: var(--text); }
+  .pillar p { font-size: 13px; line-height: 1.6; color: var(--muted); margin: 0; }
+  .pillar-gold    { border-left: 3px solid var(--gold); }
+  .pillar-sea     { border-left: 3px solid var(--sea); }
+  .pillar-forest  { border-left: 3px solid var(--forest); }
+  .pillar-violet  { border-left: 3px solid var(--violet); }
+  .pillar-red     { border-left: 3px solid var(--red); }
+
+  .item-list { display: flex; flex-direction: column; gap: 0; margin: 28px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .item-row { display: grid; grid-template-columns: 160px 1fr; gap: 18px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .item-row:last-child { border-bottom: none; }
+  .item-row:nth-child(odd) { background: rgba(255,255,255,0.012); }
+  .item-name { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--gold); letter-spacing: 0.03em; }
+  .item-desc { font-size: 13.5px; color: var(--muted-hi); line-height: 1.55; }
+  @media (max-width: 600px) { .item-row { grid-template-columns: 1fr; gap: 4px; } }
+
+  .code-block { background: #060705; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 28px 0; font-size: 13px; }
+  .code-header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .code-header span { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.06em; }
+  .code-header .lang { color: var(--gold); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .code-body { padding: 20px 20px; font-family: 'IBM Plex Mono', monospace; line-height: 1.7; overflow-x: auto; white-space: pre; font-size: 12.5px; }
+  .kw { color: #c792ea; } .fn { color: #82aaff; } .str { color: #c3e88d; } .num { color: #f78c6c; }
+  .cm { color: #5c6a55; font-style: italic; } .ty { color: #ffcb6b; } .prop { color: var(--gold); }
+
+  .flow-diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px 28px; margin: 32px 0; }
+  .diagram-title { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 24px; }
+  .flow-steps-list { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+  .flow-step { display: grid; grid-template-columns: 40px 1fr; gap: 16px; align-items: flex-start; padding: 16px 0; border-bottom: 1px solid var(--border); }
+  .flow-step:last-child { border-bottom: none; }
+  .flow-step-num {
+    width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; flex-shrink: 0;
+  }
+  .step-gold   { background: var(--gold-dim);   color: var(--gold);   border: 1px solid rgba(217,164,65,0.3); }
+  .step-sea    { background: var(--sea-dim);    color: #6fb3ba;       border: 1px solid rgba(47,122,130,0.3); }
+  .step-forest { background: var(--forest-dim); color: #7fc296;       border: 1px solid rgba(74,143,99,0.3); }
+  .step-red    { background: var(--red-dim);    color: #d97a63;      border: 1px solid rgba(179,64,43,0.3); }
+  .step-violet { background: rgba(138,118,201,0.14); color: var(--violet); border: 1px solid rgba(138,118,201,0.3); }
+  .flow-step-content strong { display: block; font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .flow-step-content p { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.55; }
+
+  .compare-cards { display: flex; flex-direction: column; gap: 0; margin: 28px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .compare-header { display: grid; grid-template-columns: 150px 1fr 1fr; background: var(--panel); border-bottom: 2px solid var(--border-hi); }
+  .compare-header-cell { padding: 12px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+  .compare-header-cell:nth-child(1) { color: var(--muted); }
+  .compare-header-cell:nth-child(2) { color: #7fc296; border-left: 1px solid var(--border); }
+  .compare-header-cell:nth-child(3) { color: var(--violet); border-left: 1px solid var(--border); }
+  .compare-row { display: grid; grid-template-columns: 150px 1fr 1fr; border-bottom: 1px solid var(--border); }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-row:hover { background: rgba(255,255,255,0.016); }
+  .compare-cell { padding: 14px 16px; font-size: 13.5px; line-height: 1.5; }
+  .compare-cell:nth-child(2), .compare-cell:nth-child(3) { border-left: 1px solid var(--border); }
+  .compare-cell.dim-label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  @media (max-width: 580px) {
+    .compare-header { grid-template-columns: 1fr; }
+    .compare-header-cell:nth-child(1) { display: none; }
+    .compare-header-cell:nth-child(2), .compare-header-cell:nth-child(3) { border-left: none; border-top: 1px solid var(--border); }
+    .compare-row { grid-template-columns: 1fr; }
+    .compare-cell.dim-label { background: var(--panel); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px 4px; }
+    .compare-cell:nth-child(2), .compare-cell:nth-child(3) { border-left: none; padding-top: 6px; padding-bottom: 6px; }
+    .compare-cell:nth-child(3) { padding-bottom: 14px; }
+  }
+
+  .tech-stack { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+  .tech-pill {
+    display: inline-flex; align-items: center; gap: 6px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    color: var(--muted-hi); letter-spacing: 0.05em; transition: border-color 0.2s, color 0.2s;
+  }
+  .tech-pill:hover { border-color: var(--border-hi); color: var(--text); }
+  .tech-pill .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .dot-gold { background: var(--gold); } .dot-sea { background: var(--sea); } .dot-forest { background: var(--forest); } .dot-violet { background: var(--violet); }
+
+  /* ─── SCREENSHOT GALLERY ──────────────────────────────────────── */
+  .shot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 32px 0; }
+  @media (max-width: 640px) { .shot-grid { grid-template-columns: 1fr; } }
+  .shot-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .shot-card img { display: block; width: 100%; height: auto; border-bottom: 1px solid var(--border); }
+  .shot-caption { padding: 12px 16px; }
+  .shot-caption .shot-name { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 0.05em; display: block; margin-bottom: 4px; }
+  .shot-caption .shot-meta { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 0; }
+  .shot-full { grid-column: 1 / -1; }
+
+  .callout { display: flex; gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 22px; margin: 28px 0; }
+  .callout-icon { font-size: 20px; flex-shrink: 0; }
+  .callout-body strong { display: block; margin-bottom: 4px; font-size: 14px; }
+  .callout-body p { font-size: 13.5px; margin: 0; color: var(--muted-hi); }
+  .callout-good { border-left: 3px solid var(--forest); }
+  .callout-info { border-left: 3px solid var(--sea); }
+  .callout-warn { border-left: 3px solid var(--gold); }
+
+  .article-footer { border-top: 1px solid var(--border); padding-top: 40px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px; }
+  .footer-left p { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.05em; margin: 0 0 6px; }
+  .footer-links { display: flex; gap: 12px; flex-wrap: wrap; }
+  .footer-link {
+    display: inline-flex; align-items: center; gap: 8px; background: var(--gold-dim); border: 1px solid rgba(217,164,65,0.3);
+    border-radius: 6px; padding: 10px 18px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--gold);
+    text-decoration: none; letter-spacing: 0.08em; transition: background 0.2s;
+  }
+  .footer-link:hover { background: rgba(217,164,65,0.22); }
+
+  @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  .hero { animation: fadeSlideUp 0.7s ease both; }
+  section { animation: fadeSlideUp 0.6s ease both; }
+
+  @media (max-width: 600px) {
+    .container { padding: 0 16px 64px; }
+    .hero { padding: 48px 0 40px; }
+    .ghost-hero { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ═══ HERO ═══ -->
+  <header class="hero">
+    <div class="hero-eyebrow">Part IV · Unity · 3D · Android</div>
+
+    <h1>
+      <span class="italic accent">Flesh</span> on the Bones:<br>
+      Ogboju Ode Steps Into<br>
+      <span class="accent">Three Dimensions</span>
+    </h1>
+
+    <div class="hero-meta">
+      <span>📅 July 2026</span>
+      <span class="sep">·</span>
+      <span>🔗 github.com/niyid/ogbojuode-3d</span>
+      <span class="sep">·</span>
+      <span>📱 Unity · C# · Android</span>
+      <span class="sep">·</span>
+      <span>⏱ 9 min read</span>
+    </div>
+
+    <p class="hero-lead">
+      Three parts into this series, Akara-ogun's journey through Igbo Irúnmọlẹ̀ has lived entirely as 2D:
+      first Jetpack Compose, then a LibGDX port. Part IV is a new branch, not a replacement — a third,
+      independent Unity prototype that reimagines the same story in 3D. It's the earliest and roughest of
+      the three so far: a one-click world-builder script standing in primitives where meshes will eventually
+      go, a riddle-and-wisdom loop lifted straight from the book's actual structure, and — for the first time
+      in this series — a real test of what AI-generated 3D assets can and can't deliver against a project
+      that has never used a single piece of external art.
+    </p>
+
+    <svg class="ghost-hero" viewBox="0 0 160 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M40 40 L40 160 M40 60 Q20 50 10 70 M40 80 Q60 70 70 90 M40 100 Q15 90 5 110 M40 120 Q65 110 75 130" stroke="#4a8f63" stroke-width="3" fill="none" opacity="0.6"/>
+      <rect x="30" y="30" width="20" height="20" stroke="#d9a441" stroke-width="2" fill="none" opacity="0.7"/>
+      <circle cx="120" cy="60" r="30" stroke="#8a76c9" stroke-width="2" fill="none" opacity="0.5"/>
+    </svg>
+  </header>
+
+  <!-- ═══ SECTION: THE PIVOT ═══ -->
+  <section>
+    <div class="section-kicker">The Pivot</div>
+    <h2>A Third Engine, Not a Replacement</h2>
+    <p>
+      Parts I through III of this series were about one architectural idea proven twice — a lean Kotlin/Compose
+      engine, then the same skeleton ported to LibGDX, both still drawing every scene procedurally with
+      <strong>zero external art</strong> in either app. Part IV breaks that streak on purpose. <code>ogbojuode-3d</code>
+      is a separate Unity project, targeting Android, exploring what the same story feels like as an explorable
+      3D space instead of branching text panels — real-time movement, line-of-sight encounters, a hub village
+      you can actually walk around in rather than read a description of.
+    </p>
+    <p>
+      That means a different question than the last two parts had to answer. Compose and LibGDX both let the
+      "no external art" rule hold because Canvas-drawn geometry was enough to represent a scene. A walkable 3D
+      forest with a hunter, four creatures, and a riddle-posing bird-king is a different ask — and this part is
+      as much about testing where AI-generated 3D asset pipelines actually help as it is about the game itself.
+    </p>
+  </section>
+
+  <!-- ═══ SECTION: WORLD BUILDER ═══ -->
+  <section>
+    <div class="section-kicker">Architecture</div>
+    <h2>One Menu Item, One Complete World</h2>
+    <p>
+      The whole prototype currently runs off eleven files — ten runtime scripts and one Editor tool. That
+      Editor tool, <code>SceneSetupWizard.cs</code>, is the load-bearing piece: a single menu command,
+      <strong>Ogboju Ode → Build Entire Universe</strong>, that assembles the hub village, the forest, all
+      four creature-tier encounters, the player, camera, lighting, and two manager singletons — entirely out
+      of primitive geometry, entirely from code, with no scene file to hand-edit.
+    </p>
+
+    <div class="tech-stack">
+      <span class="tech-pill"><span class="dot dot-gold"></span> Unity (URP)</span>
+      <span class="tech-pill"><span class="dot dot-sea"></span> C#</span>
+      <span class="tech-pill"><span class="dot dot-forest"></span> CharacterController-based movement</span>
+      <span class="tech-pill"><span class="dot dot-violet"></span> Editor-only world assembly</span>
+      <span class="tech-pill"><span class="dot dot-gold"></span> Android target</span>
+    </div>
+
+    <p>
+      The point of building it this way was speed of iteration over fidelity: every creature, prop, and
+      lighting choice is a code change, not a scene-editing session, so the whole layout can be regenerated
+      from scratch in one click whenever a design decision changes.
+    </p>
+
+    <div class="code-block">
+      <div class="code-header"><span>CreatureAI.cs — one script, three presets</span><span class="lang">C#</span></div>
+      <div class="code-body"><span class="kw">public static void</span> <span class="fn">ApplyPreset</span>(CreatureAI ai, CreatureType type)
+{
+    ai.creatureType = type;
+    <span class="kw">switch</span> (type)
+    {
+        <span class="kw">case</span> CreatureType.Agbako:
+            ai.maxHealth = <span class="num">150</span>; ai.chaseSpeed = <span class="num">3.5f</span>; ai.contactDamage = <span class="num">20</span>;
+            <span class="kw">break</span>;
+        <span class="kw">case</span> CreatureType.Ijamba:
+            ai.maxHealth = <span class="num">200</span>; ai.chaseSpeed = <span class="num">2.5f</span>; ai.contactDamage = <span class="num">30</span>;
+            <span class="kw">break</span>;
+        <span class="kw">case</span> CreatureType.Eru:
+            ai.maxHealth = <span class="num">80</span>; ai.chaseSpeed = <span class="num">6.0f</span>; ai.contactDamage = <span class="num">10</span>;
+            <span class="kw">break</span>;
+    }
+}</div>
+    </div>
+
+    <div class="callout callout-good">
+      <span class="callout-icon">🧩</span>
+      <div class="callout-body">
+        <strong>One AI, not three duplicated scripts</strong>
+        <p>Agbako, Ijamba, and Eru all run through the same <code>CreatureAI</code> component — they differ in
+        stat presets, not behavior logic, which keeps the file count honest as the creature roster grows.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION: RIDDLE / WISDOM LOOP ═══ -->
+  <section>
+    <div class="section-kicker">Design</div>
+    <h2>The Loop the Book Actually Has</h2>
+    <p>
+      It would have been easy to build this as pure combat — walk into the forest, fight four things, done.
+      That isn't what <em>Ògbójú Ọdẹ nínú Igbó Irúnmọlẹ̀</em> is actually structured around. The book's real
+      shape is expeditions launched from a safe village into danger, moral riddles posed by spirits along the
+      way, and wisdom carried home — not just kills tallied.
+    </p>
+
+    <div class="pull-quote">
+      <p>"I am king above the neck, beast below it. What manner of thing am I?"</p>
+      <cite>— The Ostrich-King, riddle prompt in ogbojuode-3d</cite>
+    </div>
+
+    <p>
+      Two of the six characters in this prototype aren't combat encounters at all. The <strong>Ostrich-King
+      (Oba Ẹyẹ)</strong> holds his ground and poses a riddle; ignore him and he's harmless, fail him and he
+      turns hostile. Three wandering <strong>ghommid</strong> spirits carry smaller riddles of their own. Both
+      route through the same <code>RiddleGiver</code> component and reward a separate <code>WisdomTracker</code>
+      singleton — deliberately not the same resource as player health, since wisdom is meant to persist even
+      through a death-and-respawn cycle at the hub.
+    </p>
+
+    <div class="flow-diagram">
+      <div class="diagram-title">What "Build Entire Universe" Actually Assembles</div>
+      <div class="flow-steps-list">
+        <div class="flow-step">
+          <div class="flow-step-num step-gold">1</div>
+          <div class="flow-step-content"><strong>Hub village</strong><p>Clay huts, six carved Arugba pillars around a lit bonfire, a spike perimeter facing the tree line.</p></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num step-forest">2</div>
+          <div class="flow-step-content"><strong>Forest</strong><p>Mahogany trees and scattered glowing "spirit fungus" markers, stretching north from the village boundary.</p></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num step-red">3</div>
+          <div class="flow-step-content"><strong>Three creatures, spaced by danger</strong><p>Eru (fast, fragile) nearest the village; Ijamba (slow, brutal) further in; Agbako (towering) deepest before the boss.</p></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num step-violet">4</div>
+          <div class="flow-step-content"><strong>The Ostrich-King and three ghommids</strong><p>Riddle encounters, not health bars — the loop's actual point.</p></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num step-sea">5</div>
+          <div class="flow-step-content"><strong>Player, camera, lighting, two managers</strong><p><code>WisdomTracker</code> and <code>ExpeditionManager</code> track state across the whole run.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">🎙️</span>
+      <div class="callout-body">
+        <strong>The riddle UI doesn't exist yet</strong>
+        <p><code>RiddleGiver</code> currently auto-resolves as "correct" on interact — there's no answer-input
+        screen yet, so the loop is testable end-to-end without one. The reward and hostility logic is already
+        wired to a single method call, waiting for a real prompt.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION: THE AI ASSET PIPELINE ═══ -->
+  <section>
+    <div class="section-kicker">Asset Pipeline</div>
+    <h2>Where "No External Art" Meets AI-Generated Meshes</h2>
+    <p>
+      This is the part of the series that's genuinely new. Parts I–III never needed an art pipeline because
+      the renderer drew everything. A walkable 3D world needs actual meshes, and generating a hunter, four
+      creatures, and a riddle-boss by hand wasn't realistic timeline-wise — so this became a real test of
+      prompt-driven 3D generation tools, credits and all.
+    </p>
+
+    <div class="shot-grid">
+      <div class="shot-card">
+        <img src="images/01-akara-ogun-concept-art.png" alt="Four Nano Banana concept art variants of Akara-Ogun">
+        <div class="shot-caption">
+          <span class="shot-name">Akara-Ogun — concept pass</span>
+          <p class="shot-meta">Tripo's Image stage (Nano Banana model) generating four reference variants from the character prompt before mesh conversion.</p>
+        </div>
+      </div>
+      <div class="shot-card">
+        <img src="images/02-akara-ogun-finished-mesh.png" alt="Finished Akara-Ogun 3D mesh in Tripo's asset viewer">
+        <div class="shot-caption">
+          <span class="shot-name">Akara-Ogun — finished mesh</span>
+          <p class="shot-meta">4,987 faces, T-pose, ready for auto-rigging — Tripo's auto-namer tagged it "tribal warrior with bone jewelry, curved blade."</p>
+        </div>
+      </div>
+      <div class="shot-card">
+        <img src="images/03-ostrich-king-finished-mesh.png" alt="Finished Ostrich-King 3D mesh in Tripo's asset viewer">
+        <div class="shot-caption">
+          <span class="shot-name">Ostrich-King (Oba Ẹyẹ) — finished mesh</span>
+          <p class="shot-meta">4,578 faces. The riddle boss's dual nature — human king above the neck, ostrich below — held up cleanly through generation.</p>
+        </div>
+      </div>
+      <div class="shot-card">
+        <img src="images/04-agbako-smart-mesh.png" alt="Agbako Smart Mesh wireframe in Tripo workspace">
+        <div class="shot-caption">
+          <span class="shot-name">Agbako — Smart Mesh pass</span>
+          <p class="shot-meta">5,086 faces. The towering boss creature, generated via Tripo's game-ready Smart Mesh pipeline rather than the high-fidelity HD track.</p>
+        </div>
+      </div>
+      <div class="shot-card">
+        <img src="images/05-ijamba-smart-mesh.png" alt="Ijamba Smart Mesh wireframe in Tripo workspace">
+        <div class="shot-caption">
+          <span class="shot-name">Ijamba — Smart Mesh pass</span>
+          <p class="shot-meta">4,774 faces. The slow, brutal-strength creature of the three-creature roster.</p>
+        </div>
+      </div>
+      <div class="shot-card">
+        <img src="images/06-eru-smart-mesh.png" alt="Eru Smart Mesh wireframe in Tripo workspace">
+        <div class="shot-caption">
+          <span class="shot-name">Eru — Smart Mesh pass</span>
+          <p class="shot-meta">5,116 faces. The fast, shape-shifting spirit — the hardest of the six to prompt for, given the "mid-transformation" brief.</p>
+        </div>
+      </div>
+    </div>
+
+    <p>
+      All six character-tier assets from the design brief — Akara-Ogun, Agbako, Ijamba, Eru, the Ostrich-King,
+      and a wandering ghommid spirit — have now been through this pipeline at least once, mostly on Tripo AI's
+      free tier via Smart Mesh generation, which trades some fidelity for topology that's actually clean enough
+      to drop into a real-time engine without a manual retopology pass first.
+    </p>
+
+    <div class="compare-cards">
+      <div class="compare-header">
+        <div class="compare-header-cell">Track</div>
+        <div class="compare-header-cell">Smart Mesh</div>
+        <div class="compare-header-cell">HD Model</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell dim-label">Built for</div>
+        <div class="compare-cell">Real-time engines, game assets, XR</div>
+        <div class="compare-cell">Hero renders, cinematics, marketing shots</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell dim-label">Topology</div>
+        <div class="compare-cell">Clean, low-poly, engine-ready out of the box</div>
+        <div class="compare-cell">High-density, needs retopology before engine use</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell dim-label">Relative cost</div>
+        <div class="compare-cell">~60 credits per generation</div>
+        <div class="compare-cell">~90 credits per generation</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell dim-label">Used for this project</div>
+        <div class="compare-cell">All six character-tier assets</div>
+        <div class="compare-cell">Not used — wrong tool for a mobile Android target</div>
+      </div>
+    </div>
+
+    <div class="callout callout-warn">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-body">
+        <strong>Free-tier limits are real, and worth planning around</strong>
+        <p>Free-tier credits capped character generation faster than expected, the Image stage's model choice
+        was locked to a single option, and free-tier outputs currently carry a non-commercial license — a
+        genuine constraint for a series that has otherwise been fully open source at every layer. Props (the
+        musket, machete, huts, pillars, trees) are being sourced instead from CC0 libraries like Kenney and
+        Poly Haven, reserving remaining AI-generation credits for the handful of assets — the six characters
+        above — where a generic library piece won't carry the story's specific mythology.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION: WHAT'S LEFT ═══ -->
+  <section>
+    <div class="section-kicker">Roadmap</div>
+    <h2>Placeholder-First, on Purpose</h2>
+    <p>
+      Every character above still stands in the running build as colored primitive geometry — cubes, capsules,
+      cylinders — while the real meshes get rigged and imported. That's deliberate: the gameplay loop (movement,
+      combat, riddles, wisdom tracking) had to prove itself playable before spending further AI-generation
+      credits or artist time dressing it up.
+    </p>
+
+    <div class="item-list">
+      <div class="item-row">
+        <div class="item-name">Rigging &amp; animation</div>
+        <div class="item-desc">Akara-Ogun and the Ostrich-King need walk/attack/idle cycles bound to their T-pose exports before they can replace their primitive stand-ins.</div>
+      </div>
+      <div class="item-row">
+        <div class="item-name">Riddle UI</div>
+        <div class="item-desc">A real prompt-and-answer screen, replacing the current auto-resolve stub in <code>RiddleGiver</code>.</div>
+      </div>
+      <div class="item-row">
+        <div class="item-name">HUD</div>
+        <div class="item-desc">Health bar, wisdom counter, charm inventory — currently all logged to the console only.</div>
+      </div>
+      <div class="item-row">
+        <div class="item-name">Audio</div>
+        <div class="item-desc">None yet — ambient forest, musket/machete SFX, the bonfire, riddle correct/wrong cues.</div>
+      </div>
+      <div class="item-row">
+        <div class="item-name">Mobile touch layout</div>
+        <div class="item-desc"><code>MobileTouchUI.cs</code> exists and is wired to the player controller, but hasn't been laid out on a Canvas or tested on a physical device.</div>
+      </div>
+      <div class="item-row">
+        <div class="item-name">Save/progress</div>
+        <div class="item-desc">Wisdom currently resets every session — no persistence layer yet.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CONCLUSION ═══ -->
+  <section>
+    <div class="section-kicker">Conclusion</div>
+    <h2>Same Story, Third Set of Bones</h2>
+    <p>
+      Parts I through III proved one engine could tell this story twice, in two different rendering
+      technologies, without ever importing a single external asset. Part IV deliberately gives that up — not
+      because the principle stopped mattering, but because a walkable 3D forest genuinely needs meshes a
+      Canvas renderer was never going to produce. What's held constant instead is the harder thing: the
+      riddle-and-wisdom structure that makes this story what it is, rather than a generic monster-killing
+      loop wearing the book's character names. Six creatures now exist as real, rigged-ready 3D assets. The
+      hunter still can't walk past a spirit without being asked a question first. That was the part worth
+      keeping.
+    </p>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="article-footer">
+    <div class="footer-left">
+      <p>Unity/C# prototype, sourced under CC0 props where possible — full transparency on AI-asset licensing in the repo.</p>
+      <p>github.com/niyid/ogbojuode-3d · github.com/niyid/ogbojuode · github.com/niyid/irekeonibudo</p>
+    </div>
+    <div class="footer-links">
+      <a class="footer-link" href="https://niyid.github.io/irekeonibudo/fagunwa-rpgs-article.html" target="_blank">← Part I: Water and Wood</a>
+      <a class="footer-link" href="https://niyid.github.io/ogbojuode/fagunwa-rpgs-article-part2.html" target="_blank">← Part II: Redrawing the Forest</a>
+      <a class="footer-link" href="https://niyid.github.io/ogbojuode/fagunwa-rpgs-article-part3.html" target="_blank">← Part III: New Bones, Old Roots</a>
+      <a class="footer-link" href="https://github.com/niyid/ogbojuode-3d" target="_blank">🗿 ogbojuode-3d →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
