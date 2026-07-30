@@ -1,3 +1,4 @@
+# Unity generated
 [Ll]ibrary/
 [Tt]emp/
 [Oo]bj/
@@ -5,13 +6,17 @@
 [Bb]uilds/
 [Ll]ogs/
 [Uu]serSettings/
+[Mm]emoryCaptures/
+
+# Rider/VSCode/VS
+.vs/
+.vscode/
 *.csproj
 *.sln
-*.unityproj
-*.pidb
 *.suo
 *.user
-*.userprefs
-.vs/
-.idea/
-*.meta
+
+# This session's tooling artefacts -- keep the fixes, not the noise
+reimport-*.log
+urp-install-*.log
+*.bak-*
