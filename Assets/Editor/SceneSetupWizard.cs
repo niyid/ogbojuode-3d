@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
@@ -282,8 +283,16 @@ public static class SceneSetupWizard
     }
 
     // --- Combat creatures ------------------------------------------------------
+
+    // Populated by BuildCreatures, read by BuildGhommids so procedurally
+    // placed spirits keep their distance from wherever the creatures ended
+    // up this playthrough.
+    private static readonly List<Vector3> creatureSpawnPositions = new List<Vector3>();
+
     private static void BuildCreatures(Transform parent)
     {
+        creatureSpawnPositions.Clear();
+
         SpawnCreature(parent, CreatureAI.CreatureType.Eru, EruFolder,
             new Vector3(-8f, 0f, 30f), new Color(0.2f, 0.5f, 0.2f), new Vector3(1.5f, 2.5f, 1.5f));
         SpawnCreature(parent, CreatureAI.CreatureType.Ijamba, IjambaFolder,
@@ -298,10 +307,19 @@ public static class SceneSetupWizard
         GameObject go = new GameObject("Creature_" + type);
         go.tag = "Enemy";
         go.transform.parent = parent;
-        go.transform.position = position;
+        // Small per-playthrough jitter around the authored staging position
+        // (Eru near the start, Agbako at the end stays fixed; the exact
+        // spot within ~4 units doesn't).
+        Vector3 jittered = ProceduralSpiritPlacer.JitterPosition(position, 4f, "creature_pos_" + type);
+        go.transform.position = jittered;
+        creatureSpawnPositions.Add(jittered);
 
         CreatureAI ai = go.AddComponent<CreatureAI>();
         CreatureAI.ApplyPreset(ai, type);
+        // Nudges the just-applied preset by +/-15% per playthrough (seeded
+        // off RunSeed) so the same creature type isn't identical every run,
+        // without touching the tuned baseline differences between types.
+        CreatureStatRoller.RollVariance(ai);
 
         GameObject model = LoadFirstModelInFolder(modelFolder);
         InstantiateModelOrPrimitive(
@@ -336,9 +354,14 @@ public static class SceneSetupWizard
 
         king.AddComponent<OstrichKingBoss>();
         RiddleGiver riddle = king.AddComponent<RiddleGiver>();
+        // Fixed fields stay as a fallback if the pool is ever empty/missing,
+        // but with the pool assigned the King draws one of several riddles
+        // at Start() instead of always asking the same one.
         riddle.riddleText = "I am king above the neck, beast below it. What manner of thing am I?";
         riddle.correctAnswerHint = "a creature of two natures / the Ostrich-King himself";
         riddle.wisdomReward = 50;
+        riddle.riddlePool = GetOrCreateBossRiddlePool();
+        riddle.maxDifficulty = RiddlePool.Difficulty.Hard;
 
         GameObject model = LoadFirstModelInFolder(OstrichKingFolder);
         if (model != null)
@@ -370,16 +393,23 @@ public static class SceneSetupWizard
     // --- Ghommids ------------------------------------------------------------
     private static void BuildGhommids(Transform parent)
     {
-        Vector3[] positions =
-        {
-            new Vector3(-15f, 0f, 22f),
-            new Vector3(18f, 0f, 40f),
-            new Vector3(-5f, 0f, 58f),
-        };
+        // Positions now scatter procedurally within WorldBounds' spawn band
+        // (shared with ExpeditionManager, so the boundary line and the
+        // spirit-scatter area can't drift out of sync), staying clear of
+        // wherever the creatures spawned this run and of each other. Same
+        // count (3) as before, just no longer hand-placed.
+        WorldBounds bounds = WorldBounds.OgbojuOdeDefaults;
+        List<Vector3> positions = ProceduralSpiritPlacer.GeneratePositions(
+            count: 3,
+            minZ: bounds.minZ, maxZ: bounds.maxZ, minX: bounds.minX, maxX: bounds.maxX,
+            avoidPoints: creatureSpawnPositions, minClearance: 8f,
+            seedStream: "ghommid_placement");
 
+        RiddlePool pool = GetOrCreateGhommidRiddlePool();
         GameObject model = LoadFirstModelInFolder(GhommidFolder);
+        DialogueTree chatter = GetOrCreateGhommidChatter();
 
-        for (int i = 0; i < positions.Length; i++)
+        for (int i = 0; i < positions.Count; i++)
         {
             GameObject ghommid = new GameObject("Ghommid_Spirit_" + i);
             ghommid.transform.parent = parent;
@@ -387,14 +417,128 @@ public static class SceneSetupWizard
 
             ghommid.AddComponent<GhommidSpirit>();
             RiddleGiver riddle = ghommid.AddComponent<RiddleGiver>();
+            // Fallback fields if the pool is ever empty; pool takes priority.
             riddle.riddleText = "What grows taller the more you cut it down?";
             riddle.correctAnswerHint = "a shadow (as evening falls) / the forest itself";
             riddle.wisdomReward = 10;
+            riddle.riddlePool = pool;
+            riddle.maxDifficulty = RiddlePool.Difficulty.Medium; // ghommids stay lighter than the King
+
+            DialogueSpeaker speaker = ghommid.AddComponent<DialogueSpeaker>();
+            speaker.tree = chatter;
 
             InstantiateModelOrPrimitive(
                 model, "Ghommid_Model", ghommid.transform,
                 PrimitiveType.Sphere, new Color(0.4f, 0.7f, 0.3f), Vector3.one * 0.8f);
         }
+    }
+
+    // --- Procedural content assets ---------------------------------------
+    // Created once under Assets/Data/ and reused on subsequent builds rather
+    // than regenerated every time, so hand-edits made in the Inspector
+    // (adding more riddles, tweaking weights) survive re-running the wizard.
+
+    private const string DataFolder = "Assets/Data";
+
+    private static RiddlePool GetOrCreateBossRiddlePool()
+    {
+        string path = DataFolder + "/OstrichKingRiddlePool.asset";
+        RiddlePool pool = AssetDatabase.LoadAssetAtPath<RiddlePool>(path);
+        if (pool != null) return pool;
+
+        pool = ScriptableObject.CreateInstance<RiddlePool>();
+        pool.riddles = new List<RiddlePool.RiddleEntry>
+        {
+            new RiddlePool.RiddleEntry {
+                riddleText = "I am king above the neck, beast below it. What manner of thing am I?",
+                correctAnswerHint = "a creature of two natures / the Ostrich-King himself",
+                wisdomReward = 50, difficulty = RiddlePool.Difficulty.Medium, weight = 1f },
+            new RiddlePool.RiddleEntry {
+                riddleText = "I guard the deepest path, yet I have never taken a single step to find it. How do I know it so well?",
+                correctAnswerHint = "it was built around him / he has waited here since the path was young",
+                wisdomReward = 50, difficulty = RiddlePool.Difficulty.Hard, weight = 1f },
+            new RiddlePool.RiddleEntry {
+                riddleText = "Cut off my legs and I still stand. Cut off my head and I still see. What am I?",
+                correctAnswerHint = "a riddle itself / a spirit, which is not bound to flesh",
+                wisdomReward = 50, difficulty = RiddlePool.Difficulty.Hard, weight = 1f },
+            new RiddlePool.RiddleEntry {
+                riddleText = "The hunter who fears the forest at night fears the wrong thing. What should he fear instead?",
+                correctAnswerHint = "his own carelessness / forgetting why he came",
+                wisdomReward = 50, difficulty = RiddlePool.Difficulty.Medium, weight = 1f },
+        };
+        EnsureFolder(DataFolder);
+        AssetDatabase.CreateAsset(pool, path);
+        AssetDatabase.SaveAssets();
+        return pool;
+    }
+
+    private static RiddlePool GetOrCreateGhommidRiddlePool()
+    {
+        string path = DataFolder + "/GhommidRiddlePool.asset";
+        RiddlePool pool = AssetDatabase.LoadAssetAtPath<RiddlePool>(path);
+        if (pool != null) return pool;
+
+        pool = ScriptableObject.CreateInstance<RiddlePool>();
+        pool.riddles = new List<RiddlePool.RiddleEntry>
+        {
+            new RiddlePool.RiddleEntry {
+                riddleText = "What grows taller the more you cut it down?",
+                correctAnswerHint = "a shadow (as evening falls) / the forest itself",
+                wisdomReward = 10, difficulty = RiddlePool.Difficulty.Easy, weight = 1f },
+            new RiddlePool.RiddleEntry {
+                riddleText = "I have no mouth, yet I whisper through every leaf. What am I?",
+                correctAnswerHint = "the wind",
+                wisdomReward = 10, difficulty = RiddlePool.Difficulty.Easy, weight = 1f },
+            new RiddlePool.RiddleEntry {
+                riddleText = "The mushroom glows brightest right before it does what?",
+                correctAnswerHint = "fades / dies",
+                wisdomReward = 12, difficulty = RiddlePool.Difficulty.Medium, weight = 0.8f },
+            new RiddlePool.RiddleEntry {
+                riddleText = "I am carried into the forest but never carried out. What am I?",
+                correctAnswerHint = "fear (left behind by the brave) / footprints",
+                wisdomReward = 12, difficulty = RiddlePool.Difficulty.Medium, weight = 0.8f },
+            new RiddlePool.RiddleEntry {
+                riddleText = "What does the hunter bring home that weighs nothing at all?",
+                correctAnswerHint = "wisdom / a story",
+                wisdomReward = 10, difficulty = RiddlePool.Difficulty.Easy, weight = 1f },
+        };
+        EnsureFolder(DataFolder);
+        AssetDatabase.CreateAsset(pool, path);
+        AssetDatabase.SaveAssets();
+        return pool;
+    }
+
+    private static DialogueTree GetOrCreateGhommidChatter()
+    {
+        string path = DataFolder + "/GhommidChatter.asset";
+        DialogueTree tree = AssetDatabase.LoadAssetAtPath<DialogueTree>(path);
+        if (tree != null) return tree;
+
+        tree = ScriptableObject.CreateInstance<DialogueTree>();
+        tree.lines = new List<DialogueTree.Line>
+        {
+            new DialogueTree.Line { id = "greet_a", text = "Heh. Another one who thinks the forest owes him passage.",
+                weight = 1f, nextLineIds = new List<string>{ "followup_a", "followup_b" } },
+            new DialogueTree.Line { id = "greet_b", text = "Small feet, big noise. You'll wake things best left sleeping.",
+                weight = 1f, nextLineIds = new List<string>{ "followup_a" } },
+            new DialogueTree.Line { id = "greet_c", text = "Mm. The bonfire's light doesn't reach this far, hunter.",
+                weight = 0.8f, nextLineIds = new List<string>{ "followup_b" } },
+            new DialogueTree.Line { id = "followup_a", text = "Answer my riddle and I'll tell you something worth knowing.",
+                weight = 1f, nextLineIds = new List<string>() },
+            new DialogueTree.Line { id = "followup_b", text = "Go on then. Press your luck.",
+                weight = 1f, nextLineIds = new List<string>() },
+        };
+        tree.openingLineIds = new List<string> { "greet_a", "greet_b", "greet_c" };
+        EnsureFolder(DataFolder);
+        AssetDatabase.CreateAsset(tree, path);
+        AssetDatabase.SaveAssets();
+        return tree;
+    }
+
+    private static void EnsureFolder(string path)
+    {
+        if (!AssetDatabase.IsValidFolder(path))
+            AssetDatabase.CreateFolder("Assets", "Data");
     }
 
     private static void BuildManagers(Transform parent, Transform playerTransform)
@@ -406,6 +550,7 @@ public static class SceneSetupWizard
 
         ExpeditionManager expedition = managers.AddComponent<ExpeditionManager>();
         expedition.player = playerTransform;
+        expedition.bounds = WorldBounds.OgbojuOdeDefaults;
     }
 
     private static void BuildCameraAndLighting(Transform playerTransform)

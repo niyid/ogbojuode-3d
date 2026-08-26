@@ -9,7 +9,12 @@ public class ExpeditionManager : MonoBehaviour
     public static ExpeditionManager Instance { get; private set; }
 
     public Transform player;
-    public float villageBoundaryZ = 15f; // matches the spike-line Z in SceneSetupWizard
+
+    // Replaces the old standalone villageBoundaryZ float — SceneSetupWizard
+    // now assigns this once from WorldBounds.OgbojuOdeDefaults, and the same
+    // struct is what BuildCreatures/BuildGhommids use for spawn placement,
+    // so the boundary and the spawn band can't silently drift apart.
+    public WorldBounds bounds = WorldBounds.OgbojuOdeDefaults;
 
     public bool InForest { get; private set; } = false;
 
@@ -23,14 +28,19 @@ public class ExpeditionManager : MonoBehaviour
     {
         if (player == null) return;
 
-        bool nowInForest = player.position.z > villageBoundaryZ;
+        bool nowInForest = player.position.z > bounds.villageBoundaryZ;
         if (nowInForest != InForest)
         {
             InForest = nowInForest;
             if (InForest)
                 Debug.Log("Expedition begins. The village falls behind.");
             else
+            {
                 Debug.Log($"Returned to the hub. Wisdom carried: {(WisdomTracker.Instance != null ? WisdomTracker.Instance.currentWisdom : 0)}");
+                // Natural checkpoint: save whenever the player makes it back
+                // to safety, rather than requiring an explicit save menu yet.
+                WisdomTracker.Instance?.Save();
+            }
         }
     }
 }

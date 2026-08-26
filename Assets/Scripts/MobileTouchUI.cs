@@ -48,12 +48,38 @@ public class MobileTouchUI : MonoBehaviour
     public Button egbeButton;
     public Button interactButton;
 
+    [Header("Accessibility (optional)")]
+    [Tooltip("Toggle for players who want riddle hints surfaced automatically. Persists across sessions.")]
+    public Toggle hintToggle;
+    [Tooltip("Text element the hint is written to when Hint Toggle is on. Leave unset to only log to console.")]
+    public Text hintDisplay;
+    public float hintTriggerRange = 4f;
+
+    private const string HintsEnabledPrefsKey = "accessibility_hintsEnabled";
+    private Transform player;
+
     void Start()
     {
         if (macheteButton != null) macheteButton.onClick.AddListener(() => hunter.TriggerMacheteAttackButton());
         if (musketButton != null) musketButton.onClick.AddListener(() => hunter.FireMusket());
         if (egbeButton != null) egbeButton.onClick.AddListener(() => hunter.CastEgbe());
         if (interactButton != null) interactButton.onClick.AddListener(TryInteractWithNearbyRiddleGiver);
+
+        GameObject p = GameObject.FindGameObjectWithTag("Player");
+        if (p != null) player = p.transform;
+
+        if (hintToggle != null)
+        {
+            hintToggle.isOn = PlayerPrefs.GetInt(HintsEnabledPrefsKey, 0) == 1;
+            hintToggle.onValueChanged.AddListener(OnHintToggleChanged);
+        }
+    }
+
+    private void OnHintToggleChanged(bool enabled)
+    {
+        PlayerPrefs.SetInt(HintsEnabledPrefsKey, enabled ? 1 : 0);
+        PlayerPrefs.Save();
+        if (!enabled && hintDisplay != null) hintDisplay.text = "";
     }
 
     // Keyboard players interact via "F near a spirit"; touch has no
@@ -70,5 +96,32 @@ public class MobileTouchUI : MonoBehaviour
     {
         if (joystick != null && hunter != null)
             hunter.MobileMoveInput = joystick.InputVector;
+
+        if (hintToggle != null && hintToggle.isOn)
+            UpdateNearestHint();
+    }
+
+    // Surfaces the correctAnswerHint of the nearest unresolved riddle spirit
+    // while the accessibility toggle is on. Doesn't change wisdomReward or
+    // pool behavior — purely a presentation aid for players who want it,
+    // opt-in and off by default.
+    private void UpdateNearestHint()
+    {
+        if (player == null || hintDisplay == null) return;
+
+        RiddleGiver nearest = null;
+        float nearestDist = hintTriggerRange;
+        foreach (RiddleGiver giver in FindObjectsOfType<RiddleGiver>())
+        {
+            if (giver.IsResolved) continue;
+            float dist = Vector3.Distance(giver.transform.position, player.position);
+            if (dist <= nearestDist)
+            {
+                nearestDist = dist;
+                nearest = giver;
+            }
+        }
+
+        hintDisplay.text = nearest != null ? $"Hint: {nearest.CurrentHint}" : "";
     }
 }
