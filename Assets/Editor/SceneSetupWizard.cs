@@ -293,11 +293,11 @@ public static class SceneSetupWizard
     {
         creatureSpawnPositions.Clear();
 
-        SpawnCreature(parent, CreatureAI.CreatureType.Eru, EruFolder,
+        SpawnCreature(parent, CreatureAI.CreatureType.Swift, EruFolder,
             new Vector3(-8f, 0f, 30f), new Color(0.2f, 0.5f, 0.2f), new Vector3(1.5f, 2.5f, 1.5f));
-        SpawnCreature(parent, CreatureAI.CreatureType.Ijamba, IjambaFolder,
+        SpawnCreature(parent, CreatureAI.CreatureType.Brute, IjambaFolder,
             new Vector3(10f, 0f, 50f), new Color(0.4f, 0.1f, 0.1f), new Vector3(3.5f, 4.5f, 3.5f));
-        SpawnCreature(parent, CreatureAI.CreatureType.Agbako, AgbakoFolder,
+        SpawnCreature(parent, CreatureAI.CreatureType.Titan, AgbakoFolder,
             new Vector3(0f, 0f, 68f), new Color(0.05f, 0.15f, 0.05f), new Vector3(3f, 6f, 3f));
     }
 
