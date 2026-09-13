@@ -20,3 +20,4 @@
 reimport-*.log
 urp-install-*.log
 *.bak-*
+.rig_backup_*/
